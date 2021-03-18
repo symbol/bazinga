@@ -1,0 +1,60 @@
+{
+  "_info": "this file contains a list of api-node peers",
+  "knownPeers": [
+    {
+      "publicKey": "47AC3041A5CA98EEA123C64CB7420ADA7F45355CF1993ECA8639891536958011",
+      "endpoint": {
+        "host": "ngl-api-001.symbolblockchain.io",
+        "port": 7900
+      },
+      "metadata": {
+        "name": "ngl-api-001",
+        "roles": "Api"
+      }
+    },
+    {
+      "publicKey": "FE0186777D17DD57CAE5E3D9531EC8E70F1F452ED777910E96A9F44D889D9684",
+      "endpoint": {
+        "host": "ngl-api-301.symbolblockchain.io",
+        "port": 7900
+      },
+      "metadata": {
+        "name": "ngl-api-301",
+        "roles": "Api"
+      }
+    },
+    {
+      "publicKey": "642197D9D5B283252BFCBC2FEF8B2EE1A7B3383DCD964D159CBF135CA31DC22B",
+      "endpoint": {
+        "host": "ngl-api-401.symbolblockchain.io",
+        "port": 7900
+      },
+      "metadata": {
+        "name": "ngl-api-401",
+        "roles": "Api"
+      }
+    },
+    {
+      "publicKey": "E1640F016401E1A8644614B1707D878992DB01B480B55AEDE0EA1A986067ED79",
+      "endpoint": {
+        "host": "ngl-api-501.symbolblockchain.io",
+        "port": 7900
+      },
+      "metadata": {
+        "name": "ngl-api-501",
+        "roles": "Api"
+      }
+    },
+    {
+      "publicKey": "0282991F51E91F8994F1B3FD4A7D1CDE39F6B828A5D419150D6E07925CFFD27C",
+      "endpoint": {
+        "host": "ngl-api-601.symbolblockchain.io",
+        "port": 7900
+      },
+      "metadata": {
+        "name": "ngl-api-601",
+        "roles": "Api"
+      }
+    }
+  ]
+}

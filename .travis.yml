@@ -14,5 +14,4 @@ jobs:
       script:
         - isort --check-only --line-length 140 .
         - pycodestyle --config=.pycodestyle -- .
-        - pylint --load-plugins pylint_quotes -- .
-
+        - pylint --load-plugins pylint_quotes -- *.py
