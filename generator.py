@@ -4,7 +4,22 @@ import argparse
 import os
 from pathlib import Path
 
+from downloader import download_file
 from NodeConfigurator import NodeConfigurator
+
+NEMESIS_SEED = {
+    'name': 'nemesis-seed.zip',
+    'url': 'https://github.com/nemtech/catapult-server/releases/download/v1.0.0.0/nemesis-seed.zip',
+    'hash': 'A58EDE0460B84D3B21FFE4F5F0F4CE109CF6476DAFB346D61F87C0152BFE9B4D'
+            '382737A496553129CAA570B944392175A1B70C0A456ABB0974781F9F94209E5C'
+}
+
+MONGO_SCRIPTS = {
+    'name': 'mongo-scripts.zip',
+    'url': 'https://github.com/nemtech/catapult-server/releases/download/v1.0.0.0/mongo-scripts.zip',
+    'hash': 'BCEEA933ED32BAD4F1D25F5CBA2116EE84DD286161FB31E6CBC75974D4665AC8'
+            '2E93FF3F3188E736B125929CAC8D8D418E4092086E47D848FA43924B21A8D8AD'
+}
 
 
 def main():
@@ -20,10 +35,9 @@ def main():
         os.makedirs(args.output, mode=0o700)
 
     configurator = NodeConfigurator(args.output, args.force, args.mode, args.voting, args.harvesting)
-    configurator.check_requirements()
-    configurator.prepare_resources()
-    configurator.prepare_peers()
-    configurator.prepare_startup_files()
+    download_file(configurator.dir, NEMESIS_SEED)
+    download_file(configurator.dir, MONGO_SCRIPTS)
+    configurator.run()
 
 
 if __name__ == '__main__':

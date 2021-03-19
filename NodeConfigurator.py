@@ -1,12 +1,14 @@
 import json
 import os
 import random
+import re
 import shutil
 from pathlib import Path
+from zipfile import ZipFile
 
 from zenlog import log
 
-from compose import patch_compose
+from compose import patch_api_compose, patch_peer_compose
 from patcher import patch_config
 from settings import HARVESTING_KEY_FILENAME, VRF_KEY_FILENAME, node_settings, role_settings
 
@@ -31,6 +33,7 @@ def select_random_peers(source, destination, count):
 class NodeConfigurator:
     def __init__(self, output_directory, force_output, node_mode, is_voting, is_harvesting):  # pylint: disable=too-many-arguments
         self.templates = Path(__file__).parent / 'templates'
+        self.startup = Path(__file__).parent / 'startup'
         self.dir = Path(output_directory)
         self.force_dir = force_output
         self.mode = node_mode
@@ -38,18 +41,49 @@ class NodeConfigurator:
         self.is_voting = is_voting
         self.is_harvesting = is_harvesting
 
-        self.has_harvesting_key = Path(HARVESTING_KEY_FILENAME).is_file()
-        self.has_vrf_key = Path(VRF_KEY_FILENAME).is_file()
-
-    def check_requirements(self):
+    def check_harvesting_requirements(self):
         if not self.is_harvesting:
             return
 
-        if not self.has_harvesting_key:
+        if not Path(HARVESTING_KEY_FILENAME).is_file():
             raise RuntimeError('harvesting requested, but harvesting key file ({}) does not exist'.format(HARVESTING_KEY_FILENAME))
 
-        if not self.has_vrf_key:
+        if not Path(VRF_KEY_FILENAME).is_file():
             raise RuntimeError('harvesting requested, but vrf key file ({}) does not exist'.format(VRF_KEY_FILENAME))
+
+    def check_voting_requirements(self):
+        if not self.is_voting:
+            return
+
+        num_voting_key_files = sum([1 for _ in Path('.').glob('private_key_tree*.dat')])
+        num_destination_key_files = sum([1 for _ in Path(self.dir / 'votingkeys').glob('private_key_tree*.dat')])
+
+        if 0 == num_voting_key_files and 0 == num_destination_key_files:
+            raise RuntimeError('no voting key files found, neither in current dir nor in destination directory')
+
+    def check_requirements(self):
+        self.check_harvesting_requirements()
+        self.check_voting_requirements()
+
+        certs = Path('certificates')
+        num_files_all = sum(1 for _ in certs.glob('**/*'))
+        num_files = sum(1 for _ in certs.glob('*'))
+
+        # currently 5, cause rest expects splitted crt for some reason (verify)
+        #
+        if num_files_all != 5 or num_files != 5:
+            raise RuntimeError('unexpected number of files in certificates directory, expect exactly 5 files')
+
+        names = {file.name for file in certs.glob('*')}
+        expected_names = set(['ca.pubkey.pem', 'node.full.crt.pem', 'node.key.pem', 'node.crt.pem', 'ca.crt.pem'])
+
+        if names != expected_names:
+            raise RuntimeError('expecting following files in certificates directory: {}'.format(expected_names))
+
+    def unzip_nemesis(self):
+        log.info('extracting nemesis seed')
+        nemesis_package = ZipFile(self.dir / 'nemesis-seed.zip')
+        nemesis_package.extractall(self.dir / 'nemesis')
 
     def prepare_resources(self):
         log.info('preparing base settings')
@@ -70,13 +104,19 @@ class NodeConfigurator:
             log.info('turning on voting')
             self.run_patches(node_settings['voting'])
 
+    @staticmethod
+    def copy_directory(source, destination, filter_cb=None):
+        for filepath in source.glob('*'):
+            if filter_cb and filter_cb(filepath):
+                continue
+
+            shutil.copy2(filepath, destination)
+            os.chmod(destination / filepath.name, 0o600)
+
     def _copy_and_patch_resources(self, destination):
         source = self.templates / 'resources'
         os.makedirs(destination, 0o700)
-        for filepath in source.glob('*'):
-            short_name = to_short_name(filepath)
-            if short_name not in role_settings[self.mode]['filtered']:
-                shutil.copy2(filepath, destination)
+        self.copy_directory(source, destination, lambda filepath: to_short_name(filepath) in role_settings[self.mode]['filtered'])
 
         if 'peer' == self.mode:
             return
@@ -94,5 +134,74 @@ class NodeConfigurator:
             filename = 'peers-{}.json'.format(role)
             select_random_peers(self.templates / 'all-{}'.format(filename), destination / filename, num_peers)
 
+    def create_subdir(self, dir_name):
+        dir_path = self.dir / dir_name
+        if dir_path.is_dir() and self.force_dir:
+            shutil.rmtree(dir_path)
+
+        os.makedirs(dir_path)
+
+    def unzip_mongo_scripts(self):
+        log.info('extracting mongo scripts')
+        nemesis_package = ZipFile(self.dir / 'mongo-scripts.zip')
+        nemesis_package.extractall(self.dir / 'mongo')
+
     def prepare_startup_files(self):
-        pass
+        docker_compose_path = self.dir / 'docker-compose.yml'
+        if self.mode == 'peer':
+            shutil.copy2(self.templates / 'docker-compose-peer.yml', docker_compose_path)
+            patch_peer_compose(docker_compose_path)
+        else:
+            shutil.copy2(self.templates / 'docker-compose-dual.yml', docker_compose_path)
+            patch_api_compose(docker_compose_path)
+
+            self.create_subdir('startup')
+            self.copy_directory(self.startup, self.dir / 'startup')
+
+            self.unzip_mongo_scripts()
+
+            self.create_subdir('dbdata')
+
+        self.create_subdir('data')
+        self.create_subdir('logs')
+
+    def copy_certificates(self):
+        log.info('copying certificates')
+        self.create_subdir('certificates')
+        self.copy_directory(Path('certificates'), self.dir / 'certificates')
+
+    def find_next_free_id(self):
+        # go through all the files, and return max id + 1
+        first_free_id = 1
+        for filepath in Path(self.dir / 'votingkeys').glob('private_key_tree*.dat'):
+            match = re.match(r'private_key_tree(.*)\.dat', filepath.name)
+            if match:
+                first_free_id = max(first_free_id, int(match.group(1)) + 1)
+        return first_free_id
+
+    def move_voting_key_file(self):
+        destination_directory = self.dir / 'votingkeys'
+        if not destination_directory.is_dir():
+            os.makedirs(destination_directory)
+
+        matching_names = {}
+        for filepath in Path('.').glob('private_key_tree*.dat'):
+            match = re.match(r'private_key_tree(.*)\.dat', filepath.name)
+            if match:
+                matching_names[int(match.group(1))] = filepath
+
+        for _, filepath in sorted(matching_names.items()):
+            free_id = self.find_next_free_id()
+            destination_filename = 'private_key_tree{}.dat'.format(free_id)
+            destination_filepath = destination_directory / destination_filename
+            shutil.move(filepath, destination_filepath)
+            log.info('moving {} -> {}'.format(filepath, destination_filepath))
+
+    def run(self):
+        self.check_requirements()
+        self.unzip_nemesis()
+        self.prepare_resources()
+        self.prepare_peers()
+        self.prepare_startup_files()
+        self.copy_certificates()
+        self.move_voting_key_file()

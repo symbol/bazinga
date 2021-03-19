@@ -2,9 +2,29 @@
 
 [![Build Status](https://travis-ci.com/nemtech/symbol-node-configurator.svg?branch=dev)](https://travis-ci.com/nemtech/symbol-node-configurator)
 
+This repository contains two helper tools:
+ * votingkey.py - this is alternative voting key file generator
+ * generate.py - actual catapult.server configuration generator, that will be described below
 
 ## Prerequisites:
+
     python3 -m pip install -r requirements.txt
+
+Generator tool assumes that in working directory, there is directory called `certificates`
+that contains:
+ * `ca.pubkey.pem`
+ * `node.full.crt.pem`
+ * `node.key.pem`
+
+When running with `--harvesting` switch, generator tool additionally expects:
+ * `private.harvesting.txt` and `private.vrf.txt`, containing respectively harvesting private key and vrf private key in hex OR
+ * ...TBD...
+
+When running with `--voting` switch, generator tool additionally expects voting key file:
+ * `private_key_tree*.dat` - the file will be MOVED to destination directory,
+
+ note: in case of `--voting` if destination directory contains file with given name, the index will be incremented, until "empty" one
+ will be found
 
 ## Examples:
 
