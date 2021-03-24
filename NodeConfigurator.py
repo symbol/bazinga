@@ -10,7 +10,7 @@ from zenlog import log
 
 from compose import patch_api_compose, patch_peer_compose
 from patcher import patch_config
-from settings import HARVESTING_KEY_FILENAME, VRF_KEY_FILENAME, node_settings, role_settings
+from settings import check_harvesting_files, node_settings, role_settings
 
 
 def to_short_name(filename):
@@ -31,25 +31,22 @@ def select_random_peers(source, destination, count):
 
 
 class NodeConfigurator:
-    def __init__(self, output_directory, force_output, node_mode, is_voting, is_harvesting):  # pylint: disable=too-many-arguments
+    def __init__(self, output_directory, force_output, node_mode, feature_settings):
         self.templates = Path(__file__).parent / 'templates'
         self.startup = Path(__file__).parent / 'startup'
         self.dir = Path(output_directory)
         self.force_dir = force_output
         self.mode = node_mode
 
-        self.is_voting = is_voting
-        self.is_harvesting = is_harvesting
+        self.is_voting = feature_settings['voting']
+        self.is_harvesting = feature_settings['harvesting']
+        self.ask_pass = feature_settings['ask-pass']
 
     def check_harvesting_requirements(self):
         if not self.is_harvesting:
             return
 
-        if not Path(HARVESTING_KEY_FILENAME).is_file():
-            raise RuntimeError('harvesting requested, but harvesting key file ({}) does not exist'.format(HARVESTING_KEY_FILENAME))
-
-        if not Path(VRF_KEY_FILENAME).is_file():
-            raise RuntimeError('harvesting requested, but vrf key file ({}) does not exist'.format(VRF_KEY_FILENAME))
+        check_harvesting_files()
 
     def check_voting_requirements(self):
         if not self.is_voting:
@@ -125,7 +122,7 @@ class NodeConfigurator:
 
     def run_patches(self, patch_map):
         for short_name, patch_cb in patch_map.items():
-            patch_config(self.dir, short_name, patch_cb)
+            patch_config(self.dir, short_name, patch_cb, ask_pass=self.ask_pass)
 
     def prepare_peers(self):
         num_peers = 20

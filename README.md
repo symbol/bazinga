@@ -13,12 +13,15 @@ This repository contains two helper tools:
 Generator tool assumes that in working directory, there is directory called `certificates`
 that contains:
  * `ca.pubkey.pem`
+ * `ca.crt.pem`
  * `node.full.crt.pem`
+ * `node.crt.pem`
  * `node.key.pem`
 
 When running with `--harvesting` switch, generator tool additionally expects:
  * `private.harvesting.txt` and `private.vrf.txt`, containing respectively harvesting private key and vrf private key in hex OR
- * ...TBD...
+ * `private.harvesting.pem` and `private.vrf.pem` pem files, containing private keys, if pem files are password protected
+  `--ask-pass` switch needs to be present
 
 When running with `--voting` switch, generator tool additionally expects voting key file:
  * `private_key_tree*.dat` - the file will be MOVED to destination directory,

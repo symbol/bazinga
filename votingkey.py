@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import os
 import stat
-import sys
 from collections import Counter
 from pathlib import Path
 
@@ -48,15 +47,15 @@ def toUrl(node):
     return 'http://{}:3000/chain/info'.format(node)
 
 
-def generate_voting_key_file(start_epoch, epoch_range):
+def generate_voting_key_file(filepath, start_epoch, epoch_range):
     key_pair = KeyPair(PrivateKey.random())
     voting_keys_generator = VotingKeysGenerator(key_pair)
-    voting_key_buffer = voting_keys_generator.generate(start_epoch, start_epoch + epoch_range)
-    log.info('---- ' * 15)
+    end_epoch = start_epoch + epoch_range
+    voting_key_buffer = voting_keys_generator.generate(start_epoch, end_epoch)
+    log.info('voting key start epoch: {}, end epoch: {}'.format(start_epoch, end_epoch))
     log.info('voting key root public key: {}'.format(key_pair.public_key))
 
     # create the file
-    filepath = Path(os.getcwd()) / 'private_key_tree1.dat'
     with open(filepath, 'wb') as output_file:
         pass
 
@@ -68,7 +67,8 @@ def generate_voting_key_file(start_epoch, epoch_range):
 
 def main():
     parser = argparse.ArgumentParser(description='Voting key tool wrapper')
-    parser.add_argument('--start_epoch', help='start epoch, if 0, retrive current epoch by querying online nodes', type=int, default=0)
+    parser.add_argument('--filename', help='voting key filename', default='private_key_tree1.dat')
+    parser.add_argument('--start-epoch', help='start epoch, if 0, retrive current epoch by querying online nodes', type=int, default=0)
     parser.add_argument(
         '--range',
         help='total range of epochs (112-360)',
@@ -76,7 +76,12 @@ def main():
         type=int,
         required=True,
         choices=range(112, 361))
+    parser.add_argument('--force', help='overwrite output file if it already exists', action='store_true')
     args = parser.parse_args()
+
+    filepath = Path(os.getcwd()) / args.filename
+    if filepath.exists() and not args.force:
+        raise FileExistsError('output file ({}) already exists, use --force to overwrite'.format(filepath))
 
     start_epoch = args.start_epoch
     if 0 == start_epoch:
@@ -84,8 +89,9 @@ def main():
         epoch = {'most_common': 1}
         asyncio.run(get(urls, epoch))
         start_epoch = epoch['most_common']
+        log.info('---- ' * 15)
 
-    generate_voting_key_file(start_epoch, args.range)
+    generate_voting_key_file(filepath, start_epoch, args.range)
 
 
 if __name__ == '__main__':
