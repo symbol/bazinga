@@ -1,14 +1,37 @@
 # symbol-node-configurator
 
-[![Build Status](https://travis-ci.com/nemtech/symbol-node-configurator.svg?branch=dev)](https://travis-ci.com/nemtech/symbol-node-configurator)
+[![Build Status](https://travis-ci.com/nemtech/symbol-node-configurator.svg?branch=main)](https://travis-ci.com/nemtech/symbol-node-configurator)
 
-This repository contains two helper tools:
+This repository contains a few tools:
+ * pemtool.py - allows conversion from raw private key to (encrypted) PEM file (openssl format)
+ * certtool.py - openssl wrapper for easy certificate generation
  * votingkey.py - this is alternative voting key file generator
  * generate.py - actual catapult.server configuration generator, that will be described below
 
 ## Prerequisites:
 
+    apt-get install python3 python3-pip openssl
     python3 -m pip install -r requirements.txt
+
+All commands below assume scripts are started from PARENT directory.
+
+## Pem tool
+
+Get help:
+    python3 symbol-node-configurator/pemtool.py --help
+
+Convert private key in hex format to encrypted PEM file
+    python3 symbol-node-configurator/pemtool.py --output ca.key.pem --ask-pass
+
+## Cert tool
+
+Get help:
+    python3 symbol-node-configurator/certtool.py --help
+
+Create symbol server certificates using ca.key.pem
+    python3 symbol-node-configurator/certtool.py --output certificates --ca ca.key.pem
+
+## Generate - config generator
 
 Generator tool assumes that in working directory, there is directory called `certificates`
 that contains:
@@ -28,11 +51,6 @@ When running with `--voting` switch, generator tool additionally expects voting 
 
  note: in case of `--voting` if destination directory contains file with given name, the index will be incremented, until "empty" one
  will be found
-
-## Examples:
-
-All examples assume the script is started from PARENT directory
-
 
 ### Create configuration for api node
 

@@ -23,7 +23,7 @@ MONGO_SCRIPTS = {
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Node configurator generator')
+    parser = argparse.ArgumentParser(description='Node configurator generator', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--mode', help='node type', choices=('api', 'peer', 'dual'), required=True)
     parser.add_argument('--voting', help='node will be voting', action='store_true')
     parser.add_argument('--harvesting', help='node will be harvesting', action='store_true')
