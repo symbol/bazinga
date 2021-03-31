@@ -18,17 +18,21 @@ All commands below assume scripts are started from PARENT directory.
 ## Pem tool
 
 Get help:
+
     python3 symbol-node-configurator/pemtool.py --help
 
 Convert private key in hex format to encrypted PEM file
+
     python3 symbol-node-configurator/pemtool.py --output ca.key.pem --ask-pass
 
 ## Cert tool
 
 Get help:
+
     python3 symbol-node-configurator/certtool.py --help
 
 Create symbol server certificates using ca.key.pem
+
     python3 symbol-node-configurator/certtool.py --output certificates --ca ca.key.pem
 
 ## Generate - config generator
@@ -62,9 +66,11 @@ To create a configuration for harvesting node two files are needed, with keys in
  * private.harvesting.txt
  * private.vrf.txt
 
-    echo "C0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FF" > private.harvesting.txt
-    echo "B007B007B007B007B007B007B007B007B007B007B007B007B007B007B007B007" > private.vrf.txt
-    python3 symbol-node-configurator/generator.py --mode peer --output ../settings
+```
+echo "C0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FFEC0FF" > private.harvesting.txt
+echo "B007B007B007B007B007B007B007B007B007B007B007B007B007B007B007B007" > private.vrf.txt
+python3 symbol-node-configurator/generator.py --mode peer --output ../settings
+```
 
 ### Create configuration for harvesting and voting peer node
 
