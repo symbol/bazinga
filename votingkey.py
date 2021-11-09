@@ -10,8 +10,8 @@ from pathlib import Path
 import aiohttp
 from aiohttp import ClientSession
 from symbolchain.core.CryptoTypes import PrivateKey
-from symbolchain.core.sym.KeyPair import KeyPair
-from symbolchain.core.sym.VotingKeysGenerator import VotingKeysGenerator
+from symbolchain.core.symbol.KeyPair import KeyPair
+from symbolchain.core.symbol.VotingKeysGenerator import VotingKeysGenerator
 from zenlog import log
 
 from nodes import nodes

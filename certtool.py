@@ -10,7 +10,7 @@ from subprocess import PIPE, STDOUT, Popen
 
 from symbolchain.core.CryptoTypes import PrivateKey
 from symbolchain.core.PrivateKeyStorage import PrivateKeyStorage
-from symbolchain.core.sym.KeyPair import KeyPair
+from symbolchain.core.symbol.KeyPair import KeyPair
 from zenlog import log
 
 
