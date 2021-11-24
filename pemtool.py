@@ -10,7 +10,7 @@ from symbolchain.core.PrivateKeyStorage import PrivateKeyStorage
 
 
 def read_key(filename):
-    return open(filename).read()
+    return open(filename, 'rt', encoding='utf8').read()
 
 
 def get_private_key(filename):
@@ -32,20 +32,20 @@ def main():
 
     filepath = Path(output_name + '.pem')
     if filepath.exists() and not args.force:
-        raise FileExistsError('output file ({}) already exists, use --force to overwrite'.format(filepath))
+        raise FileExistsError(f'output file ({filepath}) already exists, use --force to overwrite')
 
     private_key = PrivateKey(unhexlify(get_private_key(args.input)))
 
     password = None
     if args.ask_pass:
-        password = getpass.getpass('Provide {} password: '.format(filepath))
-        confirmation = getpass.getpass('Confirm {} password: '.format(filepath))
+        password = getpass.getpass(f'Provide {filepath} password: ')
+        confirmation = getpass.getpass(f'Confirm {filepath} password: ')
         if confirmation != password:
             raise RuntimeError('Provided passwords do not match')
 
     storage = PrivateKeyStorage('.', password)
     storage.save(output_name, private_key)
-    print('saved {}'.format(filepath))
+    print(f'saved {filepath}')
 
 
 if __name__ == '__main__':

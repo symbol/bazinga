@@ -8,18 +8,18 @@ DEFAULT_REST_IMAGE = 'symbolplatform/symbol-rest:release'
 
 
 def patch_compose(filepath, patch_cb):
-    with open(filepath, 'r') as input_file:
+    with open(filepath, 'rt', encoding='utf8') as input_file:
         docker_compose = yaml.load(input_file, Loader=yaml.SafeLoader)
 
     patch_cb(docker_compose)
 
-    with open(filepath, 'w') as output_file:
+    with open(filepath, 'wt', encoding='utf8') as output_file:
         output_file.write(yaml.dump(docker_compose, default_style='\'', sort_keys=False))
 
 
 def patch_user(compose, container_names):
     if not sys.platform.startswith('win'):
-        user_entry = '{}:{}'.format(os.getuid(), os.getgid())
+        user_entry = f'{os.getuid()}:{os.getgid()}'
         for container in container_names:
             compose['services'][container]['user'] = user_entry
 

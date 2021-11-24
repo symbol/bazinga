@@ -19,14 +19,14 @@ def to_short_name(filename):
 
 def select_random_peers(source, destination, count):
     all_nodes = None
-    with open(source, 'r') as input_file:
+    with open(source, 'rt', encoding='utf8') as input_file:
         all_nodes = json.load(input_file)
 
     random.shuffle(all_nodes['knownPeers'])
     num_nodes = min(len(all_nodes['knownPeers']), count)
     all_nodes['knownPeers'] = all_nodes['knownPeers'][:num_nodes]
 
-    with open(destination, 'w') as output_file:
+    with open(destination, 'wt', encoding='utf8') as output_file:
         json.dump(all_nodes, output_file, indent=4)
 
 
@@ -75,12 +75,12 @@ class NodeConfigurator:
         expected_names = set(['ca.pubkey.pem', 'node.full.crt.pem', 'node.key.pem', 'node.crt.pem', 'ca.crt.pem'])
 
         if names != expected_names:
-            raise RuntimeError('expecting following files in certificates directory: {}'.format(expected_names))
+            raise RuntimeError(f'expecting following files in certificates directory: {expected_names}')
 
     def unzip_nemesis(self):
         log.info('extracting nemesis seed')
-        nemesis_package = ZipFile(self.dir / 'nemesis-seed.zip')
-        nemesis_package.extractall(self.dir / 'nemesis')
+        with ZipFile(self.dir / 'nemesis-seed.zip') as nemesis_package:
+            nemesis_package.extractall(self.dir / 'nemesis')
 
     def prepare_resources(self):
         log.info('preparing base settings')
@@ -128,8 +128,8 @@ class NodeConfigurator:
         num_peers = 20
         destination = self.dir / 'resources'
         for role in ['api', 'p2p']:
-            filename = 'peers-{}.json'.format(role)
-            select_random_peers(self.templates / 'all-{}'.format(filename), destination / filename, num_peers)
+            filename = f'peers-{role}.json'
+            select_random_peers(self.templates / f'all-{filename}', destination / filename, num_peers)
 
     def create_subdir(self, dir_name):
         dir_path = self.dir / dir_name
@@ -140,8 +140,8 @@ class NodeConfigurator:
 
     def unzip_mongo_scripts(self):
         log.info('extracting mongo scripts')
-        nemesis_package = ZipFile(self.dir / 'mongo-scripts.zip')
-        nemesis_package.extractall(self.dir / 'mongo')
+        with ZipFile(self.dir / 'mongo-scripts.zip') as nemesis_package:
+            nemesis_package.extractall(self.dir / 'mongo')
 
     def prepare_startup_files(self):
         docker_compose_path = self.dir / 'docker-compose.yml'
@@ -189,10 +189,10 @@ class NodeConfigurator:
 
         for _, filepath in sorted(matching_names.items()):
             free_id = self.find_next_free_id()
-            destination_filename = 'private_key_tree{}.dat'.format(free_id)
+            destination_filename = f'private_key_tree{free_id}.dat'
             destination_filepath = destination_directory / destination_filename
             shutil.move(filepath, destination_filepath)
-            log.info('moving {} -> {}'.format(filepath, destination_filepath))
+            log.info(f'moving {filepath} -> {destination_filepath}')
 
     def run(self):
         self.check_requirements()

@@ -20,7 +20,7 @@ from nodes import nodes
 async def fetch_html(url, session, **kwargs):
     resp = await session.request(method='GET', url=url, **kwargs)
     resp.raise_for_status()
-    log.info('Got response [{}] for URL: {}'.format(resp.status, url))
+    log.info(f'Got response [{resp.status}] for URL: {url}')
     data = await resp.json()
     return data
 
@@ -30,9 +30,12 @@ async def parse(url, session, collected):
         data = await fetch_html(url, session)
         collected[url] = data
     except (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError) as exc:
-        log.error('aiothtp exception for {} [{}]: {}'.format(url, getattr(exc, 'status', None), getattr(exc, 'message', None)))
+        status = getattr(exc, 'status', None)
+        message = getattr(exc, 'message', None)
+        log.error(f'aiothtp exception for {url} [{status}]: {message}')
     except Exception as exc:  # pylint: disable=broad-except
-        log.error('Non-aiohttp exception occured: {}'.format(getattr(exc, '__dict__', {})))
+        exception_attributes = getattr(exc, '__dict__', {})
+        log.error(f'Non-aiohttp exception occured: {exception_attributes}')
 
 
 async def get(urls, epoch_descriptor):
@@ -46,7 +49,7 @@ async def get(urls, epoch_descriptor):
 
 
 def toUrl(node):
-    return 'http://{}:3000/chain/info'.format(node)
+    return f'http://{node}:3000/chain/info'
 
 
 def generate_voting_key_file(filepath, start_epoch, epoch_range):
@@ -54,8 +57,8 @@ def generate_voting_key_file(filepath, start_epoch, epoch_range):
     voting_keys_generator = VotingKeysGenerator(key_pair)
     end_epoch = start_epoch + epoch_range
     voting_key_buffer = voting_keys_generator.generate(start_epoch, end_epoch)
-    log.info('voting key start epoch: {}, end epoch: {}'.format(start_epoch, end_epoch))
-    log.info('voting key root public key: {}'.format(key_pair.public_key))
+    log.info(f'voting key start epoch: {start_epoch}, end epoch: {end_epoch}')
+    log.info(f'voting key root public key: {key_pair.public_key}')
 
     # create the file
     with open(filepath, 'wb') as output_file:
@@ -83,7 +86,7 @@ def main():
 
     filepath = Path(os.getcwd()) / args.filename
     if filepath.exists() and not args.force:
-        raise FileExistsError('output file ({}) already exists, use --force to overwrite'.format(filepath))
+        raise FileExistsError(f'output file ({filepath}) already exists, use --force to overwrite')
 
     start_epoch = args.start_epoch
     if 0 == start_epoch:

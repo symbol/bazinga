@@ -9,11 +9,11 @@ VRF_KEY_FILENAME = 'private.vrf'
 
 
 def get_txt_key(filename):
-    return open(filename + '.txt').read().strip()
+    return open(filename + '.txt', 'rt', encoding='utf8').read().strip()
 
 
 def get_pem_key(ask_pass, filename):
-    password = getpass.getpass('Provide {}.pem password: '.format(filename)) if ask_pass else None
+    password = getpass.getpass(f'Provide {filename}.pem password: ') if ask_pass else None
     storage = PrivateKeyStorage('.', password)
     return str(storage.load(filename))
 
@@ -69,8 +69,8 @@ def check_harvesting_files():
     if Path(HARVESTING_KEY_FILENAME + '.txt').is_file() and Path(VRF_KEY_FILENAME + '.txt').is_file():
         return
 
-    raise RuntimeError('harvesting requested, but harvesting or vrf key files do not exist ({}, {}) (.pem or .txt)'.format(
-        HARVESTING_KEY_FILENAME, VRF_KEY_FILENAME))
+    raise RuntimeError(f'harvesting requested, but harvesting or vrf key files do not exist ({HARVESTING_KEY_FILENAME}, {VRF_KEY_FILENAME})'
+                       ' (.pem or .txt)')
 
 
 def patch_harvesting(config, **kwargs):

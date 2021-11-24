@@ -17,11 +17,12 @@ def calculate_file_hash(filepath):
 
 
 def download_file(output_dir, descriptor):
-    output_path = output_dir / descriptor['name']
+    descriptor_name = descriptor['name']
+    output_path = output_dir / descriptor_name
 
     if output_path.is_file():
         if descriptor['hash'] == calculate_file_hash(output_path):
-            log.info('proper file already downloaded ({})'.format(descriptor['name']))
+            log.info(f'proper file already downloaded ({descriptor_name})')
             return
 
         log.warn('file exists, but has invalid hash, re-downloading')
@@ -29,10 +30,10 @@ def download_file(output_dir, descriptor):
 
     req = requests.get(descriptor['url'])
     if 200 != req.status_code:
-        raise RuntimeError('could not download file ({}), try again'.format(descriptor['name']))
+        raise RuntimeError(f'could not download file ({descriptor_name}), try again')
 
     if descriptor['hash'] != calculate_buffer_hash(req.content):
-        raise RuntimeError('downloaded file ({}) has invalid hash'.format(descriptor['name']))
+        raise RuntimeError(f'downloaded file ({descriptor_name}) has invalid hash')
 
     with open(output_path, 'wb') as output_file:
         output_file.write(req.content)

@@ -16,18 +16,17 @@ from zenlog import log
 
 def run_openssl(args, show_output=True):
     command_line = ['openssl'] + args
-    process = Popen(command_line, stdout=PIPE, stderr=STDOUT)
-
     all_lines = []
-    for line_bin in iter(process.stdout.readline, b''):
-        line = line_bin.decode('ascii')
-        all_lines.append(line)
+    with Popen(command_line, stdout=PIPE, stderr=STDOUT) as process:
+        for line_bin in iter(process.stdout.readline, b''):
+            line = line_bin.decode('ascii')
+            all_lines.append(line)
 
-        if show_output:
-            sys.stdout.write(line)
-            sys.stdout.flush()
+            if show_output:
+                sys.stdout.write(line)
+                sys.stdout.flush()
 
-    process.wait()
+        process.wait()
 
     return all_lines
 
@@ -36,19 +35,19 @@ def check_openssl_version():
     version_output = ''.join(run_openssl(['version', '-v'], False))
     match = re.match(r'^OpenSSL +([^ ]*) ', version_output)
     if not match or not match.group(1).startswith('1.1.1'):
-        raise RuntimeError('{} requires openssl version >=1.1.1'.format(__file__))
+        raise RuntimeError(f'{__file__} requires openssl version >=1.1.1')
 
 
 def get_common_name(default_value, prompt):
     if default_value:
         return default_value
 
-    return input('Enter {}: '.format(prompt)).strip()
+    return input(f'Enter {prompt}: ').strip()
 
 
 def prepare_ca_config(ca_pem_path, ca_cn):
-    with open('ca.cnf', 'wt') as output_file:
-        output_file.write('''[ca]
+    with open('ca.cnf', 'wt', encoding='utf8') as output_file:
+        output_file.write(f'''[ca]
 default_ca = CA_default
 
 [CA_default]
@@ -56,7 +55,7 @@ new_certs_dir = ./new_certs
 
 database = index.txt
 serial   = serial.dat
-private_key = {private_key_path}
+private_key = {ca_pem_path}
 certificate = ca.crt.pem
 policy = policy_catapult
 
@@ -68,24 +67,24 @@ prompt = no
 distinguished_name = dn
 
 [dn]
-CN = {cn}
-'''.format(private_key_path=ca_pem_path, cn=ca_cn))
+CN = {ca_cn}
+''')
 
     os.makedirs('new_certs')
     os.chmod('new_certs', 0o700)
 
-    with open('index.txt', 'wt') as output_file:
+    with open('index.txt', 'wt', encoding='utf8') as output_file:
         output_file.write('')
 
 
 def prepare_node_config(node_cn):
-    with open('node.cnf', 'wt') as output_file:
-        output_file.write('''[req]
+    with open('node.cnf', 'wt', encoding='utf8') as output_file:
+        output_file.write(f'''[req]
 prompt = no
 distinguished_name = dn
 [dn]
-CN = {cn}
-'''.format(cn=node_cn))
+CN = {node_cn}
+''')
 
 
 def main():
@@ -100,7 +99,7 @@ def main():
     filepath = Path(args.output)
     if filepath.exists():
         if not args.force:
-            raise FileExistsError('output directory ({}) already exists, use --force to overwrite'.format(filepath))
+            raise FileExistsError(f'output directory ({filepath}) already exists, use --force to overwrite')
         shutil.rmtree(filepath)
 
     check_openssl_version()
@@ -154,7 +153,7 @@ def main():
         '-in', 'node.csr.pem',
         '-out', 'node.crt.pem'])
 
-    log.info('certificates generated in {} directory'.format(args.output))
+    log.info(f'certificates generated in {args.output} directory')
 
 
 if __name__ == '__main__':

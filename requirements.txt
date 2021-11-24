@@ -1,10 +1,5 @@
-aiodns==2.0.0
-aiohttp==3.7.4
-isort==5.7.0
-pycodestyle==2.6.0
-pylint==2.7.2
-pylint-quotes==0.2.1
-pyyaml==5.4.1
-requests==2.25.1
-symbol-sdk-core-python==2.0.0
+aiohttp==3.8.1
+PyYAML==5.4.1
+requests==2.26.0
+symbol-sdk-core-python==2.0.1
 zenlog==1.1
