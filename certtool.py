@@ -8,12 +8,21 @@ import sys
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
 
-from symbolchain.core.Network import NetworkLocator
-from symbolchain.core.PrivateKeyStorage import PrivateKeyStorage
-from symbolchain.core.symbol.KeyPair import KeyPair
-from symbolchain.core.symbol.Network import Network
+from symbolchain.Network import NetworkLocator
+from symbolchain.PrivateKeyStorage import PrivateKeyStorage
+from symbolchain.symbol.KeyPair import KeyPair
+from symbolchain.symbol.Network import Network
 from zenlog import log
 
+
+def _read_file(filepath):
+    with open(filepath, 'rt', encoding='utf8') as output_file:
+        return output_file.read()
+
+
+def _write_file(filepath, content):
+    with open(filepath, 'wt', encoding='utf8') as output_file:
+        return output_file.write(content)
 
 def run_openssl(args, show_output=True):
     command_line = ['openssl'] + args
@@ -144,6 +153,9 @@ def openssl_prepare_certs(ca_path):
         '-out', 'node.crt.pem'
     ])
 
+    full_crt = _read_file('node.crt.pem')
+    full_crt += _read_file('ca.crt.pem')
+    _write_file('node.full.crt.pem', full_crt)
 
 def prepare_directory(directory_path, force):
     filepath = Path(directory_path)
@@ -209,7 +221,7 @@ def main():
     if args.package:
         package_filenames = ['node.crt.pem', 'node.key.pem']
         if 'all' == args.package_mode:
-            package_filenames += ['ca.pubkey.pem', 'ca.crt.pem']
+            package_filenames += ['ca.pubkey.pem', 'ca.crt.pem', 'node.full.crt.pem']
 
         for filename in package_filenames:
             destination_path = package_path / filename

@@ -2,7 +2,7 @@
 import getpass
 from pathlib import Path
 
-from symbolchain.core.PrivateKeyStorage import PrivateKeyStorage
+from symbolchain.PrivateKeyStorage import PrivateKeyStorage
 
 HARVESTING_KEY_FILENAME = 'private.harvesting'
 VRF_KEY_FILENAME = 'private.vrf'

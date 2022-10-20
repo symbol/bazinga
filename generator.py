@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--output', help='output directory', default='../settings')
     parser.add_argument('--force', help='overwrite output directory', action='store_true')
     parser.add_argument('--ask-pass', help='ask about pass when loading pem key files', action='store_true')
+    parser.add_argument('--network', help='network type', choices=('mainnet', 'testnet'), default='mainnet')
     args = parser.parse_args()
 
     if not Path(args.output).is_dir():
@@ -40,7 +41,7 @@ def main():
         'harvesting': args.harvesting,
         'ask-pass': args.ask_pass
     }
-    configurator = NodeConfigurator(args.output, args.force, args.mode, feature_settings)
+    configurator = NodeConfigurator(args.output, args.force, args.mode, feature_settings, args.network)
     download_file(configurator.dir, NEMESIS_SEED)
     download_file(configurator.dir, MONGO_SCRIPTS)
     configurator.run()

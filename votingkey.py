@@ -9,9 +9,9 @@ from pathlib import Path
 
 import aiohttp
 from aiohttp import ClientSession
-from symbolchain.core.CryptoTypes import PrivateKey
-from symbolchain.core.symbol.KeyPair import KeyPair
-from symbolchain.core.symbol.VotingKeysGenerator import VotingKeysGenerator
+from symbolchain.CryptoTypes import PrivateKey
+from symbolchain.symbol.KeyPair import KeyPair
+from symbolchain.symbol.VotingKeysGenerator import VotingKeysGenerator
 from zenlog import log
 
 from nodes import nodes
@@ -88,6 +88,7 @@ def main():
     if filepath.exists() and not args.force:
         raise FileExistsError(f'output file ({filepath}) already exists, use --force to overwrite')
 
+    os.mkdir(filepath.parent)
     start_epoch = args.start_epoch
     if 0 == start_epoch:
         urls = set(map(toUrl, nodes))

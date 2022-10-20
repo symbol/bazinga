@@ -31,12 +31,13 @@ def select_random_peers(source, destination, count):
 
 
 class NodeConfigurator:
-    def __init__(self, output_directory, force_output, node_mode, feature_settings):
+    def __init__(self, output_directory, force_output, node_mode, feature_settings, network):
         self.templates = Path(__file__).parent / 'templates'
         self.startup = Path(__file__).parent / 'startup'
         self.dir = Path(output_directory)
         self.force_dir = force_output
         self.mode = node_mode
+        self.network = network
 
         self.is_voting = feature_settings['voting']
         self.is_harvesting = feature_settings['harvesting']
@@ -115,8 +116,11 @@ class NodeConfigurator:
         os.makedirs(destination, 0o700)
         self.copy_directory(source, destination, lambda filepath: to_short_name(filepath) in role_settings[self.mode]['filtered'])
 
+        network_resources = self.templates / f'{self.network}/resources'
+        self.copy_directory(network_resources, destination)
+
         if 'peer' == self.mode:
-            return
+           return
 
         self.run_patches(role_settings[self.mode]['patches'])
 
@@ -129,7 +133,7 @@ class NodeConfigurator:
         destination = self.dir / 'resources'
         for role in ['api', 'p2p']:
             filename = f'peers-{role}.json'
-            select_random_peers(self.templates / f'all-{filename}', destination / filename, num_peers)
+            select_random_peers(self.templates / f'{self.network}/all-{filename}', destination / filename, num_peers)
 
     def create_subdir(self, dir_name):
         dir_path = self.dir / dir_name

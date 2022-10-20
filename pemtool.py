@@ -5,8 +5,8 @@ import getpass
 from binascii import unhexlify
 from pathlib import Path
 
-from symbolchain.core.CryptoTypes import PrivateKey
-from symbolchain.core.PrivateKeyStorage import PrivateKeyStorage
+from symbolchain.CryptoTypes import PrivateKey
+from symbolchain.PrivateKeyStorage import PrivateKeyStorage
 
 
 def read_key(filename):
